@@ -7,6 +7,43 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 
+# -------------------------------
+# IMPORTANT FEATURES
+# -------------------------------
+selected_cols = [
+
+    "% 1st Trimester registration to Total ANC Registrations - 2019-20",
+
+    "% Pregnant Woman received 4 ANC check ups to Total ANC Registrations - 2019-20",
+
+    "% Pregnant women given 180 IFA to Total ANC Registration - 2019-20",
+
+    "% New cases of Pregnant Women detected at institution for hypertension to Total ANC Registrations - 2019-20",
+
+    "% Institutional deliveries to Total Reported Deliveries - 2019-20",
+
+    "% Safe deliveries to Total Reported Deliveries - 2019-20",
+
+    "% Home deliveries to Total Reported Deliveries - 2019-20",
+
+    "% C-section deliveries (Public + Pvt.) to reported institutional (Public + Pvt.) deliveries - 2019-20",
+
+    "% cases of Pregnant women with Obstetric Complications and attended to reported deliveries - 2019-20",
+ 
+    "% Complicated Pregnancies treated with Blood Transfusion to Total Women with Obstetric Complications attended - 2019-20",
+
+    "% Pregnant women given 360 Calcium to Total ANC Registration - 2019-20",
+
+    "% Pregnant women tested positive for GDM to Total ANC Registration - 2019-20",
+
+    "% Pregnant women tested for Syphilis to Total ANC Registration - 2019-20",
+
+    "% Pregnant women treatd for Syphilis to Total sero positive for Syphilis - 2019-20",
+
+    "Number of Pregnant Women having severe anaemia (Hb<7) treated at institution - 2019-20",
+
+
+    ]
 
 # -------------------------------
 # LOAD DATA
@@ -16,10 +53,17 @@ def load_data(folder_path):
     dfs = []
 
     for file in files:
-        df = pd.read_csv(os.path.join(folder_path, file))
+        file_path = os.path.join(folder_path, file)
+
+        df = pd.read_csv(file_path)
 
         state = file.split('-')[-1].split('.')[0].upper()
+
         df['State'] = state
+
+        df = clean_data(df)
+
+        df.to_csv(file_path, index=False)
 
         dfs.append(df)
 
@@ -32,17 +76,27 @@ def load_data(folder_path):
 def clean_data(df):
     df = df.copy()
 
+    df = df.loc[:, ~df.columns.str.contains("2018-19")]
+    
     if 'Indicators' in df.columns:
         df.rename(columns={'Indicators': 'District'}, inplace=True)
     else:
         df['District'] = 'Unknown'
 
+    keep_cols = ['S.No', 'District', 'State'] + selected_cols;
+    keep_cols = [col for col in keep_cols if col in df.columns]
+    df = df[keep_cols]
+    
+    df.replace(r'^\s*$', np.nan, regex=True, inplace=True)
+
     for col in df.columns:
         if col not in ['State', 'District']:
-            df[col] = df[col].astype(str).str.replace(',', '')
+            df[col] = df[col].astype(str).str.replace(',', '',regex=False)
             df[col] = pd.to_numeric(df[col], errors='coerce')
 
     df.replace([np.inf, -np.inf], np.nan, inplace=True)
+
+    df = df.fillna(0)
 
     return df
 
@@ -53,9 +107,6 @@ def clean_data(df):
 def create_risk(df):
     df = df.copy()
 
-    num_cols = df.select_dtypes(include=np.number).columns
-    selected_cols = num_cols[:min(10, len(num_cols))]
-
     df['risk_score'] = df[selected_cols].median(axis=1)
 
     low = df['risk_score'].quantile(0.33)
@@ -64,7 +115,7 @@ def create_risk(df):
     def label(x):
         if x < low:
             return "Low"
-        elif x < high:
+        elif x < high and x > low:
             return "Medium"
         else:
             return "High"
@@ -81,10 +132,9 @@ def train_and_save():
     folder_path = r"C:\MCA\Project\AIML\Maternal\data"
 
     df = load_data(folder_path)
-    df = clean_data(df)
     df = create_risk(df)
 
-    X = df.select_dtypes(include=np.number).drop(['risk_score'], axis=1)
+    X = df[selected_cols]
     y = df['Risk_Level']
 
     feature_columns = X.columns.tolist()
