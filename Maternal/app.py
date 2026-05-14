@@ -27,10 +27,10 @@ html, body, [class*="css"] {
 .stApp {
       background:
     radial-gradient(
-        circle at top left,
-        rgba(74, 62, 128, 0.45),
-        rgba(16, 95, 129, 0.20),
-        rgba(6, 78, 59, 0.06)
+        circle at center,
+        rgba(45, 212, 192, 0.25),
+        rgba(45, 212, 191, 0.10),
+        rgba(6, 178, 59, 0.06)
     );
 }
 
@@ -190,7 +190,7 @@ width: 150%;
 /* Hide Streamlit Branding */
 #MainMenu {visibility: hidden;}
 footer {visibility: hidden;}
-
+header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
@@ -232,10 +232,6 @@ def load_data():
 
     df = pd.concat(dfs, ignore_index=True)
 
-    if 'Indicators' in df.columns:
-        df.rename(columns={'Indicators': 'District'}, inplace=True)
-    else:
-        df['District'] = 'Unknown'
 
     return df
 
@@ -525,7 +521,7 @@ elif page == "Prediction":
                 shap_df = shap_df.sort_values(
                     by="abs",
                     ascending=False
-                ).head(8)
+                ).head(5)      #the top feature graph is shown
 
                 # ---------------- GRAPH ----------------
                 fig = go.Figure()
@@ -557,7 +553,7 @@ elif page == "Prediction":
 
                 st.plotly_chart(
                     fig,
-                    use_container_width=True,
+                    width='stretch',
                     config={"displayModeBar": False}
                 )
 
@@ -611,8 +607,12 @@ elif page == "Comparison":
         df_numeric.median(numeric_only=True)
     )
 
-    df_compare = df_numeric.groupby(
-        'State'
+    df_compare = df_numeric[
+    ~df_numeric['District'].str.startswith('_', na=False)
+    ]
+
+    df_compare = df_compare.groupby(
+    'State'
     ).median(numeric_only=True)
 
     states = df_compare.index.tolist()
@@ -642,12 +642,14 @@ elif page == "Comparison":
 
             fig.add_trace(go.Scatter(
                 y=data1.values,
+                #x=data1.index,
                 mode='lines+markers',
                 name=state1
             ))
 
             fig.add_trace(go.Scatter(
                 y=data2.values,
+                #x=data2.index,
                 mode='lines+markers',
                 name=state2
             ))
@@ -668,7 +670,7 @@ elif page == "Comparison":
 
             st.plotly_chart(
                 fig,
-                use_container_width=True,
+                width='stretch',
                 config={"displayModeBar": False}
             )
 
