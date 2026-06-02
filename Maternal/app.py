@@ -4,16 +4,16 @@ import numpy as np
 import os
 import pickle
 import plotly.graph_objects as go
-import shap
 
-# ---------------- PAGE CONFIG ----------------
+
+# PAGE CONFIG 
 st.set_page_config(
     page_title="OBSERA Dashboard",
     page_icon="🩺",
     layout="wide"
 )
 
-# ---------------- MODERN UI ----------------
+# MODERN UI
 st.markdown("""
 <style>
 
@@ -194,23 +194,20 @@ header {visibility: hidden;}
 </style>
 """, unsafe_allow_html=True)
 
-# ---------------- LOAD MODEL ----------------
+# LOAD MODEL 
 model = pickle.load(open("model/model.pkl", "rb"))
 scaler = pickle.load(open("model/scaler.pkl", "rb"))
 le = pickle.load(open("model/encoder.pkl", "rb"))
 features = pickle.load(open("model/features.pkl", "rb"))
 imputer = pickle.load(open("model/imputer.pkl", "rb"))
 
-# ---------------- SHAP ----------------
-explainer = shap.TreeExplainer(model)
-
-# ---------------- PREPROCESS ----------------
+# PREPROCESS 
 def preprocess_input(df):
     df = df.astype(str).replace(',', '', regex=True)
     df = df.apply(pd.to_numeric, errors='coerce')
     return df
 
-# ---------------- LOAD DATA ----------------
+# LOAD DATA 
 @st.cache_data
 def load_data():
 
@@ -237,11 +234,11 @@ def load_data():
 
 df = load_data()
 
-# ---------------- SESSION STATE ----------------
+# SESSION STATE 
 if "page" not in st.session_state:
     st.session_state.page = "Dashboard"
 
-# ---------------- SIDEBAR ----------------
+# SIDEBAR 
 pages = ["Dashboard", "Prediction", "Comparison"]
 
 with st.sidebar:
@@ -260,7 +257,7 @@ with st.sidebar:
 page = st.session_state.page
 
 
-# ---------------- DASHBOARD ----------------
+# DASHBOARD 
 if page == "Dashboard":
 
     st.markdown(
@@ -276,7 +273,7 @@ if page == "Dashboard":
     st.write("")
     st.write("")
 
-    # card arrow Button #
+    # card arrow Button 
     st.markdown("""
     <style>
         div.stButton > button {
@@ -307,7 +304,7 @@ if page == "Dashboard":
 
     col1, col2 = st.columns(2)
 
-    # ---------------- PREDICTION CARD ----------------
+    # PREDICTION CARD 
     with col1:
 
         st.markdown("""
@@ -324,7 +321,7 @@ if page == "Dashboard":
                 st.session_state.page = "Prediction"
                 st.rerun()
 
-    # ---------------- COMPARISON CARD ----------------
+    # COMPARISON CARD 
     with col2:
 
         st.markdown("""
@@ -341,18 +338,18 @@ if page == "Dashboard":
                 st.session_state.page = "Comparison"
                 st.rerun()
 
-    # ---------------- ABOUT ----------------
+    # ABOUT 
     st.markdown("""
     <div class='card'>
     <h3>📌 About the Project</h3>
     <p>
     This AI-based maternal health dashboard predicts maternal risk levels
-    using machine learning and provides explainable insights using SHAP values.
+    using machine learning and provides explainable insights.
     </p>
     </div>
     """, unsafe_allow_html=True)
 
-# ---------------- PREDICTION ----------------
+# PREDICTION 
 elif page == "Prediction":
 
     st.markdown(
@@ -366,7 +363,7 @@ elif page == "Prediction":
 
     st.write("")
 
-    # ---------------- FILTERING ----------------
+    # FILTERING 
     df['District'] = df['District'].astype(str)
 
     df['is_state_row'] = df['District'].str.contains('_', na=False)
@@ -384,12 +381,12 @@ elif page == "Prediction":
 
     district = st.selectbox("Select District", districts)
 
-    # ---------------- PREDICT ----------------
+    # PREDICT 
     if st.button("Predict Risk"):
 
         with st.spinner("Analyzing maternal health data..."):
 
-            # ---------------- FILTER ----------------
+            # FILTER 
             if "_" in district:
 
                 filtered = df[
@@ -417,19 +414,19 @@ elif page == "Prediction":
 
                 sample = filtered.head(1)
 
-                # ---------------- PREPROCESS ----------------
+                # PREPROCESS 
                 X_df = preprocess_input(sample[features])
 
                 X_imputed = imputer.transform(X_df)
 
                 X_scaled = scaler.transform(X_imputed)
 
-                # ---------------- PREDICT ----------------
+                # PREDICT 
                 pred = model.predict(X_scaled)
 
                 result = le.inverse_transform(pred)[0]
 
-                # ---------------- METRICS ----------------
+                # METRICS 
                 col1, col2, col3 = st.columns(3)
 
                 with col1:
@@ -462,7 +459,7 @@ elif page == "Prediction":
                     </div>
                     """, unsafe_allow_html=True)
 
-                # ---------------- RESULT CARD ----------------
+                # RESULT CARD 
                 if result == "High":
 
                     bg = "linear-gradient(135deg,#EF4444,#7F1D1D)"
@@ -488,49 +485,38 @@ elif page == "Prediction":
                 </div>
                 """, unsafe_allow_html=True)
 
-                # ---------------- SHAP ----------------
+               # TOP HEALTH FACTORS
+
                 st.write("")
-                st.markdown("## 🧠 Why this prediction?")
+                st.markdown("## 🧠 Top Health Indicators")
 
-                X_processed_df = pd.DataFrame(
-                    X_scaled,
-                    columns=features
-                )
+                # Take actual values from selected row of filtered 
+                actual_values = sample[features].iloc[0]
 
-                shap_values = explainer.shap_values(X_processed_df)
-
-                if isinstance(shap_values, list):
-
-                    shap_val = shap_values[pred[0]][0]
-
-                else:
-
-                    shap_val = shap_values[0]
-
-                shap_val = np.array(shap_val).flatten()
-
-                min_len = min(len(features), len(shap_val))
-
-                shap_df = pd.DataFrame({
-                    "Feature": features[:min_len],
-                    "Impact": shap_val[:min_len]
+                # Convert into dataframe
+                factor_df = pd.DataFrame({
+                    "Feature": actual_values.index,
+                    "Value": actual_values.values
                 })
 
-                shap_df["abs"] = np.abs(shap_df["Impact"])
+                # Convert values to numeric
+                factor_df["Value"] = pd.to_numeric(
+                    factor_df["Value"],
+                    errors='coerce'
+                )
 
-                shap_df = shap_df.sort_values(
-                    by="abs",
-                    ascending=False
-                ).head(5)      #the top feature graph is shown
+                # Sort highest values first
+                factor_df = factor_df.head(5)
 
-                # ---------------- GRAPH ----------------
+                # GRAPH 
                 fig = go.Figure()
 
                 fig.add_trace(go.Bar(
-                    x=shap_df["Impact"],
-                    y=shap_df["Feature"],
+                    x=factor_df["Value"],
+                    y=factor_df["Feature"],
                     orientation='h',
                     marker=dict(color="#10B981")
+
                 ))
 
                 fig.update_layout(
@@ -539,16 +525,9 @@ elif page == "Prediction":
                     plot_bgcolor="#111827",
                     font=dict(color="white"),
                     title={
-                        'text': "Top Factors Affecting Prediction",
+                        'text': "Top Health Indicator Values",
                         'x': 0.5
-                    },
-                    height=500,
-                    margin=dict(l=20, r=20, t=60, b=20),
-                    yaxis=dict(
-                        autorange="reversed",
-                        showgrid=False
-                    ),
-                    xaxis=dict(showgrid=False)
+                    }
                 )
 
                 st.plotly_chart(
@@ -557,26 +536,20 @@ elif page == "Prediction":
                     config={"displayModeBar": False}
                 )
 
-                # ---------------- REASONS ----------------
-                st.markdown("## 📌 Key Reasons")
+                # REASONS 
 
-                for _, row in shap_df.iterrows():
-
-                    direction = (
-                        "increased"
-                        if row["Impact"] > 0
-                        else "decreased"
-                    )
+                st.markdown("## 📌 Health Indicator Details")
+                for _, row in factor_df.iterrows():
+                    value = row["Value"]
 
                     st.markdown(f"""
                     <div class='card'>
-                    • <b>{row['Feature']}</b> {direction} the risk
+                     <b>{row['Feature']}</b><br>
                     </div>
                     """, unsafe_allow_html=True)
-
                     st.write("")
 
-# ---------------- COMPARISON ----------------
+# COMPARISON 
 elif page == "Comparison":
 
     st.markdown(
@@ -589,7 +562,7 @@ elif page == "Comparison":
         st.rerun()
     st.write("")         
 
-    # ---------------- NUMERIC DATA ----------------
+    # NUMERIC DATA 
     df_numeric = df.copy()
 
     for col in df_numeric.columns:
@@ -625,7 +598,7 @@ elif page == "Comparison":
     with col2:
         state2 = st.selectbox("Select State 2", states)
 
-    # ---------------- COMPARE ----------------
+    # COMPARE 
     if st.button("Compare States"):
 
         if state1 == state2:
@@ -674,7 +647,7 @@ elif page == "Comparison":
                 config={"displayModeBar": False}
             )
 
-            # ---------------- SUMMARY ----------------
+            # SUMMARY 
             st.write("")
 
             st.markdown(f"""
