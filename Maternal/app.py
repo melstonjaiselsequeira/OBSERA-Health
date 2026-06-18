@@ -195,11 +195,27 @@ header {visibility: hidden;}
 """, unsafe_allow_html=True)
 
 # LOAD MODEL 
-model = pickle.load(open("model/model.pkl", "rb"))
-scaler = pickle.load(open("model/scaler.pkl", "rb"))
-le = pickle.load(open("model/encoder.pkl", "rb"))
-features = pickle.load(open("model/features.pkl", "rb"))
-imputer = pickle.load(open("model/imputer.pkl", "rb"))
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+model = pickle.load(
+    open(os.path.join(BASE_DIR, "model", "model.pkl"), "rb")
+)
+
+scaler = pickle.load(
+    open(os.path.join(BASE_DIR, "model", "scaler.pkl"), "rb")
+)
+
+le = pickle.load(
+    open(os.path.join(BASE_DIR, "model", "encoder.pkl"), "rb")
+)
+
+features = pickle.load(
+    open(os.path.join(BASE_DIR, "model", "features.pkl"), "rb")
+)
+
+imputer = pickle.load(
+    open(os.path.join(BASE_DIR, "model", "imputer.pkl"), "rb")
+)
 
 # PREPROCESS 
 def preprocess_input(df):
@@ -211,7 +227,7 @@ def preprocess_input(df):
 @st.cache_data
 def load_data():
     
- folder_path = r"C:/MCA/Project/AIML/Maternal/data"
+ folder_path = os.path.join(BASE_DIR, "data")
 
     dfs = []
 
