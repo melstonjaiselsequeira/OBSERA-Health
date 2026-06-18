@@ -227,7 +227,7 @@ def preprocess_input(df):
 @st.cache_data
 def load_data():
     
- folder_path = os.path.join(BASE_DIR, "data")
+    folder_path = os.path.join(BASE_DIR, "data")
 
     dfs = []
 
