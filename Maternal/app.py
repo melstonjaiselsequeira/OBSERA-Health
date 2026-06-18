@@ -211,7 +211,7 @@ def preprocess_input(df):
 @st.cache_data
 def load_data():
 
-    folder_path = r"C:/MCA/Project/AIML/Maternal/data"
+    folder_path = r"data"
 
     dfs = []
 
