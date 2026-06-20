@@ -285,7 +285,6 @@ if page == "Dashboard":
         "<div class='sub-title'>AI Powered Maternal Risk Prediction System</div>",
         unsafe_allow_html=True
     )
-   
 
     st.write("")
     st.write("")
