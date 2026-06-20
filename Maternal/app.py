@@ -8,7 +8,7 @@ import plotly.graph_objects as go
 
 # PAGE CONFIG 
 st.set_page_config(
-    page_title="OBSERA Dashboard",
+    page_title="OBSERA Health - AI Powered Maternal Risk Prediction System",
     page_icon="🩺",
     layout="wide"
 )
@@ -285,6 +285,13 @@ if page == "Dashboard":
         "<div class='sub-title'>AI Powered Maternal Risk Prediction System</div>",
         unsafe_allow_html=True
     )
+    st.markdown("""
+        ### About OBSERA Health
+
+        OBSERA Health is an AI-powered maternal risk prediction platform that uses machine learning to analyze maternal health indicators and predict risk levels.
+
+        The OBSERA Health system helps healthcare professionals identify maternal health risks and improve preventive care.
+    """)
 
     st.write("")
     st.write("")
