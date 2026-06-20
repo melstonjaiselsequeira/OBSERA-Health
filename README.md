@@ -3,9 +3,7 @@
 AI Powered Maternal Risk Prediction System
 
 Live Demo:
-https://obsera-maternal-risk-prediction.streamlit.app/
-
-
+https://obsera-health.streamlit.app/
 
 **Healthcare Patient Risk Prediction(AI/ML)**
 1. Open Maternal Folder
