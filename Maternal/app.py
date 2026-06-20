@@ -285,13 +285,7 @@ if page == "Dashboard":
         "<div class='sub-title'>AI Powered Maternal Risk Prediction System</div>",
         unsafe_allow_html=True
     )
-    st.markdown("""
-        ### About OBSERA Health
-
-        OBSERA Health is an AI-powered maternal risk prediction platform that uses machine learning to analyze maternal health indicators and predict risk levels.
-
-        The OBSERA Health system helps healthcare professionals identify maternal health risks and improve preventive care.
-    """)
+   
 
     st.write("")
     st.write("")
@@ -364,10 +358,10 @@ if page == "Dashboard":
     # ABOUT 
     st.markdown("""
     <div class='card'>
-    <h3>📌 About the Project</h3>
+    <h3>📌 About OBSERA Health</h3>
     <p>
-    This AI-based maternal health dashboard predicts maternal risk levels
-    using machine learning and provides explainable insights.
+     OBSERA Health is an AI-powered maternal risk prediction platform that uses machine learning to analyze maternal health indicators and predict risk levels.
+     The OBSERA Health system helps healthcare professionals identify maternal health risks and improve preventive care.
     </p>
     </div>
     """, unsafe_allow_html=True)
